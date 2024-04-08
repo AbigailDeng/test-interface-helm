@@ -1,64 +1,23 @@
 version: 2.1
 
+# Define the jobs we want to run for this project
 jobs:
-  release:
+  build:
     docker:
-      - image: ubuntu:latest
-
+      - image: cimg/base:2023.03
     steps:
       - checkout
+      - run: echo "this is the build job"
+  test:
+    docker:
+      - image: cimg/base:2023.03
+    steps:
+      - checkout
+      - run: echo "this is the test job"
 
-      - run:
-          name: Configure Git
-          command: |
-            git config --global user.name "$GITHUB_ACTOR"
-            git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
-
-      - run:
-          name: Install Helm
-          command: |
-            apt-get update && apt-get install -y curl
-            curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
-
-      - run:
-          name: Run chart-releaser
-          command: |
-            # Replace this line with the commands to run chart-releaser in CircleCI
-
-      - run:
-          name: Set up Python
-          command: |
-            apt-get install -y python3 python3-pip
-            pip3 install --upgrade pip
-
-      - run:
-          name: Set up chart-testing
-          command: |
-            # Replace this line with the commands to set up chart-testing in CircleCI
-
-      - run:
-          name: Run chart-testing (list-changed)
-          command: |
-            changed=$(ct list-changed --target-branch $CIRCLE_BRANCH)
-            if [[ -n "$changed" ]]; then
-              echo "changed=true" >> "$CIRCLE_ARTIFACTS/output.txt"
-            fi
-
-      - run:
-          name: Run chart-testing (lint)
-          command: |
-            if [[ $(cat "$CIRCLE_ARTIFACTS/output.txt") == 'true' ]]; then
-              ct lint --target-branch $CIRCLE_BRANCH
-            fi
-
-      - run:
-          name: Create kind cluster
-          command: |
-            # Replace this line with the commands to create kind cluster in CircleCI
-
-      - run:
-          name: Run chart-testing (install)
-          command: |
-            if [[ $(cat "$CIRCLE_ARTIFACTS/output.txt") == 'true' ]]; then
-              ct install --target-branch $CIRCLE_BRANCH
-            fi
+# Orchestrate our job run sequence
+workflows:
+  build_and_test:
+    jobs:
+      - build
+      - test
